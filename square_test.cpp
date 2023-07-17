@@ -52,7 +52,8 @@ int main()
 
     XMapWindow(xdisplay, xwindow);
 
-    int size = LoadFile("./num256.bmp");
+    // int size = LoadFile("./num256.bmp");
+    int size = LoadFile("./num256.yuv");
 
     EGLDisplay display = nullptr;
     EGLContext context = nullptr;
@@ -139,12 +140,31 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 	const char* fshader =
 		"#version 300 es\n"
         "precision mediump float;"
-        "in vec2 Flag_uv;\n"
-		"out vec4 outFragmentColor;\n"
-        "uniform sampler2D Texture;\n"
-		"void main() {\n"
-            "outFragmentColor = texture2D( Texture, Flag_uv );\n"
-		"}\n";
+//        "in vec2 Flag_uv;\n"
+		"in vec2 textureCoordinate;\n"
+//        "out vec4 outFragmentColor;\n"
+        "uniform sampler2D videoFrame;\n"
+        "uniform sampler2D videoFrameUV;\n"
+//        "uniform sampler2D Texture;\n"
+        "const mat3 yuv2rgb = mat3("
+                          "1, 0, 1.2802,"
+                          "1, -0.214821, -0.380589,"
+                          "1, 2.127982, 0"
+                          ");\n"
+
+		// "void main() {\n"
+        //     "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+		// "}\n";
+
+        "void main() {\n"
+            "vec3 yuv = vec3(\n"
+                            "1.1643 * (texture2D(videoFrame, textureCoordinate).r - 0.0625),\n"
+                            "texture2D(videoFrameUV, textureCoordinate).r - 0.5,\n"
+                            "texture2D(videoFrameUV, textureCoordinate).a - 0.5\n"
+                            ");\n"
+            "vec3 rgb = yuv * yuv2rgb;\n"
+            "gl_FragColor = vec4(rgb, 1.0);\n";
+
 
 
 	GLfloat points[] = {
