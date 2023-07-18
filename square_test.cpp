@@ -13,7 +13,8 @@
 
 #define TEXHEIGHT   256
 #define TEXWIDTH    256
-GLubyte texture[TEXHEIGHT][TEXWIDTH][3];
+// GLubyte texture[TEXHEIGHT][TEXWIDTH][3];
+GLubyte ***texture;
 
 // typedef const char GLbyte;
 
@@ -80,8 +81,17 @@ typedef struct {
 
 int main()
 {
+    texture = (GLubyte***)malloc(TEXWIDTH*TEXHEIGHT*3*(sizeof(GLubyte**)));
+
+    for (int i = 0; i < TEXWIDTH; i++) {
+        texture[i] = (GLubyte **)malloc(TEXHEIGHT * sizeof(GLubyte *));
+        for (int j = 0; j < TEXHEIGHT; j++){
+            texture[i][j] = (GLubyte*)malloc(3 * sizeof(GLubyte));
+        }
+    }
+
     Display *xdisplay = XOpenDisplay(nullptr);
-    Window xwindow = XCreateSimpleWindow(xdisplay, DefaultRootWindow(xdisplay), 100, 100, 300, 300,
+    Window xwindow = XCreateSimpleWindow(xdisplay, DefaultRootWindow(xdisplay), 100, 100, 256, 256,
                                          1, BlackPixel(xdisplay, 0), WhitePixel(xdisplay, 0));
 
     XMapWindow(xdisplay, xwindow);
@@ -160,12 +170,12 @@ void LoadFile_2()
 
     save();
 
-    // for (int i = 0; i < TEXWIDTH; i++) {
-    //     for (int j = 0; j <TEXHEIGHT; j++)
-    //     {
-    //         std::cout << "texture[" << i << "][" << j << "][2] = " << texture[i][j][2] << std::endl;
-    //     }
-    // }
+    for (int i = 0; i < TEXWIDTH; i++) {
+        for (int j = 0; j <TEXHEIGHT; j++)
+        {
+            std::cout << "texture[" << i << "][" << j << "][2] = " << texture[i][j][2] << std::endl;
+        }
+    }
 }
 
 void save(){
