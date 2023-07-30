@@ -11,7 +11,7 @@
 
 #define TEXHEIGHT   256
 #define TEXWIDTH    256
-GLubyte texture[TEXHEIGHT][TEXWIDTH][3];            //読み込むテクスチャ枚数分用意する。
+GLubyte texture[TEXHEIGHT][TEXWIDTH][3];
 
 // typedef const char GLbyte;
 
@@ -52,8 +52,7 @@ int main()
 
     XMapWindow(xdisplay, xwindow);
 
-    // int size = LoadFile("./num256.bmp");
-    int size = LoadFile("./num256.yuv");
+    int size = LoadFile("./num256.bmp");
 
     EGLDisplay display = nullptr;
     EGLContext context = nullptr;
@@ -126,6 +125,16 @@ int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLConte
 
 void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 {
+	const char* shader =
+		"#version 300 es\n"
+		// "layout(location = 0) in vec3 position;\n"
+		// "layout(location = 1) in vec2 vuv;\n"
+        "out vec2 Flag_uv;\n"
+		"void main(void) {\n"
+            "Flag_uv  = vec2(0,0);\n"
+			"gl_Position = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+		"}\n";
+
 	const char* vshader =
 		"#version 300 es\n"
 		"layout(location = 0) in vec3 position;\n"
@@ -140,55 +149,36 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 	const char* fshader =
 		"#version 300 es\n"
         "precision mediump float;"
-//        "in vec2 Flag_uv;\n"
-		"in vec2 textureCoordinate;\n"
-//        "out vec4 outFragmentColor;\n"
-        "uniform sampler2D videoFrame;\n"
-        "uniform sampler2D videoFrameUV;\n"
-//        "uniform sampler2D Texture;\n"
-        "const mat3 yuv2rgb = mat3("
-                          "1, 0, 1.2802,"
-                          "1, -0.214821, -0.380589,"
-                          "1, 2.127982, 0"
-                          ");\n"
-
-		// "void main() {\n"
-        //     "outFragmentColor = texture2D( Texture, Flag_uv );\n"
-		// "}\n";
-
-        "void main() {\n"
-            "vec3 yuv = vec3(\n"
-                            "1.1643 * (texture2D(videoFrame, textureCoordinate).r - 0.0625),\n"
-                            "texture2D(videoFrameUV, textureCoordinate).r - 0.5,\n"
-                            "texture2D(videoFrameUV, textureCoordinate).a - 0.5\n"
-                            ");\n"
-            "vec3 rgb = yuv * yuv2rgb;\n"
-            "gl_FragColor = vec4(rgb, 1.0);\n";
-
+        "in vec2 Flag_uv;\n"
+		"out vec4 outFragmentColor;\n"
+        "uniform sampler2D Texture;\n"
+		"void main() {\n"
+            "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+		"}\n";
 
 
 	GLfloat points[] = {
                     -0.5f, 0.5f, 0.0f, 
 				    -0.5f, -0.5f, 0.0f, 
 				    0.5f, -0.5f,  0.0f,
-				    0.5f, 0.5f, 0.0f,
+				    0.5f, 0.5f, 0.0f
 
-                0.3f, 0.8f, 0.0f,//四角形2つ目
-    			0.5f, -0.3f, 0.0f,
-	    		-0.7f, 0.5f, 0.0f,
-		    	-0.2f, -0.2f, 0.0f
+                // 0.3f, 0.8f, 0.0f,//四角形2つ目
+    			// 0.5f, -0.3f, 0.0f,
+	    		// -0.7f, 0.5f, 0.0f,
+		    	// -0.2f, -0.2f, 0.0f
                 };
 
 
-	// GLfloat colors[] = { 0.5f, 0.0f, 0.3f,
-	// 			 0.5f, 0.8f, 0.0f,
-	// 			 1.0f, 0.0f, 1.0f,
-	// 			 1.0f, 0.8f, 1.0f,
+	GLfloat colors[] = { 0.5f, 0.0f, 0.3f,
+				 0.5f, 0.8f, 0.0f,
+				 1.0f, 0.0f, 1.0f,
+				 1.0f, 0.8f, 1.0f,
 
-    //             0.5f, 0.0f, 1.0f,//四角形2つ目
-    //             0.5f, 0.3f, 0.5f,
-    //             1.0f, 0.0f, 1.0f,
-    //             0.2f, 0.1f, 1.0f };
+                0.5f, 0.0f, 1.0f,//四角形2つ目
+                0.5f, 0.3f, 0.5f,
+                1.0f, 0.0f, 1.0f,
+                0.2f, 0.1f, 1.0f };
 
     GLfloat vertex_uv[] = { 
                 0.0f, 1.0f,
@@ -203,7 +193,9 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
     //           0.0f, 0.0f,
     //           };                
 
-    GLushort indices[] = { 0, 1, 2, 0, 2, 3, 4,5,6, 5,6,7 };
+    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
+    GLuint Shader = loadShader(GL_VERTEX_SHADER, vshader);
 
     GLuint program = createProgram(vshader, fshader);
 
@@ -285,7 +277,7 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
         // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         // glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
         // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        glDrawElements ( GL_TRIANGLES, 12, GL_UNSIGNED_SHORT, indices );
+        glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
 
         eglSwapBuffers(display, surface);
         // degree = (degree + 1) % 360;
@@ -306,9 +298,9 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 GLuint createProgram(const char *vshader, const char *fshader)
 {
     GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vshader);
-    std::cout << "vshader = " << vshader << std::endl;
+    // std::cout << "vshader = " << vshader << std::endl;
     GLuint fragShader = loadShader(GL_FRAGMENT_SHADER, fshader);
-    std::cout << "fshader = " << fshader << std::endl;
+    // std::cout << "fshader = " << fshader << std::endl;
     GLuint program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragShader);
@@ -351,4 +343,3 @@ void deleteShaderProgram(GLuint shaderProgram)
 {
     glDeleteProgram(shaderProgram);
 }
-
