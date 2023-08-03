@@ -16,3 +16,45 @@
 - 魚眼→平面化
 
 - 座標変換
+
+
+
+
+
+## 関数の整理
+現在
+main
+
+必要なデータの読み込み
+    LoadFile
+
+EGL初期処理
+    initializeEGL
+
+メインループ
+    mainloop
+
+
+終了処理
+destroyEGL(display, context, surface);
+XDestroyWindow(xdisplay, xwindow);
+XCloseDisplay(xdisplay);
+
+
+
+修正
+
+main
+初期処理
+    LoadFile
+    initializeEGL
+    init
+
+メインループ = 描画（draw）
+
+glDrawElements
+eglSwapBuffers
+
+
+
+終了処理
