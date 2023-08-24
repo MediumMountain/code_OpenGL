@@ -1,7 +1,7 @@
 #include "square_test.h"
 
 //g++ EGL_test.cpp -o EGL_test -lX11 -lEGL -lGL
-GLubyte yuv[TEXHEIGHT][TEXWIDTH][3];
+
 
 int main()
 {
@@ -12,6 +12,7 @@ int main()
     XMapWindow(xdisplay, xwindow);
 
     int size = LoadFile("./num256.bmp");
+    // int size = LoadFile("./paraboloid1.bmp");
 
     EGLDisplay display = nullptr;
     EGLContext context = nullptr;
@@ -41,30 +42,43 @@ int LoadFile(char *filename)
   if ((fp = fopen(filename, "rb")) != NULL) {
     //ファイルヘッダ分、シークする。
     fseek(fp, 54L, SEEK_SET);
-
-    //動的にファイルサイズを取得できるようにする。
-    // n_read = fread(texture, 1, sizeof texture, fp);
-    // n_read = fread(texture, 1, 262198, fp);
-    // n_read = fread(texture, 1, 66614, fp);
-    n_read = fread(texture, 1, 196662, fp);
+    n_read = fread(texture0, 1, 196662, fp);
 
     fclose(fp);
 
     for (int i = 0; i < TEXHEIGHT; i++) {
             for (int j = 0; j < TEXWIDTH; j++) {
-                yuv[i][j][0] = texture[i][j][0] * 0.2126 + texture[i][j][1] * 0.7152 + texture[i][j][2] * 0.0722;
-                yuv[i][j][1] = texture[i][j][0] * -0.114572 + texture[i][j][1] * -0.385428 + texture[i][j][2] * 0.5;
-                yuv[i][j][2] = texture[i][j][0] * 0.5 + texture[i][j][1] * -0.454153 + texture[i][j][2] * -0.045847;
+                yuv[i][j][0] = texture0[i][j][0] * 0.2126 + texture0[i][j][1] * 0.7152 + texture0[i][j][2] * 0.0722;
+                yuv[i][j][1] = texture0[i][j][0] * -0.114572 + texture0[i][j][1] * -0.385428 + texture0[i][j][2] * 0.5;
+                yuv[i][j][2] = texture0[i][j][0] * 0.5 + texture0[i][j][1] * -0.454153 + texture0[i][j][2] * -0.045847;
+            }
+    }
+  }
+
+    std::cout << "yuv[100][100][0] = " << (int)yuv[100][100][0] << std::endl;
+    std::cout << "yuv[100][100][1] = " << (int)yuv[100][100][1] << std::endl;
+    std::cout << "yuv[100][100][2] = " << (int)yuv[100][100][2] << std::endl;
+
+    for (int i = 0; i < TEXHEIGHT; i++) {
+            for (int j = 0; j < TEXWIDTH; j++) {
+                texture[i][j][0] = (yuv[i][j][0] - 16) * 1.164 +                                (yuv[i][j][2] - 128) * 1.596;
+                texture[i][j][1] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * -0.391 + (yuv[i][j][2] - 128) * -0.813;
+                texture[i][j][2] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * 2.018;
+
+                // texture[i][j][0] = yuv[i][j][0] * 1.164 +                         yuv[i][j][2] * 1.596;
+                // texture[i][j][1] = yuv[i][j][0] * 1.164 + yuv[i][j][1] * -0.391 + yuv[i][j][2] * -0.813;
+                // texture[i][j][2] = yuv[i][j][0] * 1.164 + yuv[i][j][1] * 2.018;
+
+                if(texture[i][j][0] < 0){texture[i][j][0] = 0;} else if(texture[i][j][0] > 255){texture[i][j][0] = 255;}
+                if(texture[i][j][1] < 0){texture[i][j][1] = 0;} else if(texture[i][j][1] > 255){texture[i][j][1] = 255;}
+		        if(texture[i][j][2] < 0){texture[i][j][2] = 0;} else if(texture[i][j][2] > 255){texture[i][j][2] = 255;}
             }
     }
 
-    wp = fopen("test.yuv","w");
-    fwrite(yuv,196608,6,wp);
-    fclose(wp);
-
-  }
-
-  return n_read;
+    // std::cout << "texture create" << std::endl;
+    std::cout << "texture[100][100][0] = " << (int)texture[100][100][0] << std::endl;
+    std::cout << "texture[100][100][1] = " << (int)texture[100][100][1] << std::endl;
+    std::cout << "texture[100][100][2] = " << (int)texture[100][100][2] << std::endl;
 }
 
 
@@ -97,15 +111,15 @@ int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLConte
 
 void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 {
-	const char* shader =
-		"#version 300 es\n"
-		// "layout(location = 0) in vec3 position;\n"
-		// "layout(location = 1) in vec2 vuv;\n"
-        "out vec2 Flag_uv;\n"
-		"void main(void) {\n"
-            "Flag_uv  = vec2(0,0);\n"
-			"gl_Position = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
-		"}\n";
+	// const char* shader =
+	// 	"#version 300 es\n"
+	// 	// "layout(location = 0) in vec3 position;\n"
+	// 	// "layout(location = 1) in vec2 vuv;\n"
+    //     "out vec2 Flag_uv;\n"
+	// 	"void main(void) {\n"
+    //         "Flag_uv  = vec2(0,0);\n"
+	// 		"gl_Position = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+	// 	"}\n";
 
 	const char* vshader =
 		"#version 300 es\n"
@@ -117,7 +131,6 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 			"gl_Position = vec4(position, 1.0f);\n"
 		"}\n";
 
-
 	const char* fshader =
 		"#version 300 es\n"
         "precision mediump float;"
@@ -125,15 +138,25 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 		"out vec4 outFragmentColor;\n"
         "uniform sampler2D Texture;\n"
 		"void main() {\n"
-            // "outFragmentColor = texture2D( Texture, Flag_uv );\n"
-            "vec3 yuv = texture( Texture, Flag_uv ).rgb;\n"
-            "outFragmentColor.x = (float(298)*(yuv.x-float(16))+float(409)*(yuv.z-float(128)+float(128))/float(256);\n"
-            "outFragmentColor.y = (float(298)*(yuv.x-float(16))-float(100)*(yuv.y-float(128)-float(208)*(yuv.z-float(128))+float(128))/float(256);\n"
-            "outFragmentColor.z = (float(298)*(yuv.x-float(16))+float(516)*(yuv.y-float(128)+float(128))/float(256);\n"
-            "if(outFragmentColor.x < 0){outFragmentColor.x = 0;} else if(outFragmentColor.x > 255){outFragmentColor.x = 255;}\n"
-            "if(outFragmentColor.y < 0){outFragmentColor.y = 0;} else if(outFragmentColor.y > 255){outFragmentColor.y = 255;}\n"
-		    "if(outFragmentColor.z < 0){outFragmentColor.z = 0;} else if(outFragmentColor.z > 255){outFragmentColor.z = 255;}\n"
-        "}\n";
+            "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+            "outFragmentColor = vec4(0.3, 0.8, 0.3, 1.0);\n"
+		"}\n";
+	// const char* fshader =
+	// 	"#version 300 es\n"
+    //     "precision mediump float;"
+    //     "in vec2 Flag_uv;\n"
+	// 	"out vec4 outFragmentColor;\n"
+    //     "uniform sampler2D Texture;\n"
+	// 	"void main() {\n"
+    //         // "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+    //         "vec3 yuv = texture( Texture, Flag_uv ).rgb;\n"
+    //         "outFragmentColor.x = (float(298)*(yuv.x-float(16))+float(409)*(yuv.z-float(128)+float(128))/float(256);\n"
+    //         "outFragmentColor.y = (float(298)*(yuv.x-float(16))-float(100)*(yuv.y-float(128)-float(208)*(yuv.z-float(128))+float(128))/float(256);\n"
+    //         "outFragmentColor.z = (float(298)*(yuv.x-float(16))+float(516)*(yuv.y-float(128)+float(128))/float(256);\n"
+    //         "if(outFragmentColor.x < 0){outFragmentColor.x = 0;} else if(outFragmentColor.x > 255){outFragmentColor.x = 255;}\n"
+    //         "if(outFragmentColor.y < 0){outFragmentColor.y = 0;} else if(outFragmentColor.y > 255){outFragmentColor.y = 255;}\n"
+	// 	    "if(outFragmentColor.z < 0){outFragmentColor.z = 0;} else if(outFragmentColor.z > 255){outFragmentColor.z = 255;}\n"
+    //     "}\n";
 
 
 	GLfloat points[] = {
@@ -174,7 +197,7 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 
     GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    GLuint Shader = loadShader(GL_VERTEX_SHADER, vshader);
+    // GLuint Shader = loadShader(GL_VERTEX_SHADER, vshader);
 
     GLuint program = createProgram(vshader, fshader);
 
@@ -306,7 +329,7 @@ GLuint loadShader(GLenum shaderType, const char *source)
     GLchar *infolog;
 
     glGetShaderInfoLog(shader, max, &max, infolog);
-    std::cout << " infolog \n" << infolog << std::endl;
+    // std::cout << " infolog \n" << infolog << std::endl;
 
     GLint compiled = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
