@@ -117,13 +117,16 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
             // "outFragmentColor.y = 0.8;\n"
             // "outFragmentColor.z = 0.3;\n"
             "mat3 m = mat3(\n"
-            "1.0,1.0,1.0,\n"
+            "1.0,2.0,3.0,\n"
             "1.0,1.0,1.0,\n"
             "1.0,1.0,1.0\n"
             ");\n"
-            "vec3 test2 = vec3(m * test);\n"
-            "outFragmentColor = vec4(test2, 1);\n"
-            // "outFragmentColor = vec4(test);\n"
+            // "vec3 v = vec3(1, 1, 1);\n"
+            // "vec3 test2 = vec3(m * (test + v));\n"
+            // "outFragmentColor = vec4(test2, 1);\n"
+            // "outFragmentColor = vec4(test * m, 1);\n"
+            "outFragmentColor = vec4( m * test, 1);\n"
+            // "outFragmentColor = vec4((test5.x + 20.0f), (test.y + 20.0f), (test.z + 20.0f), 1);\n"
 		"}\n";
 
 
