@@ -46,165 +46,39 @@ int LoadFile(char *filename)
 
     fclose(fp);
 
-    //texture RGB作成
     for (int i = 0; i < TEXHEIGHT; i++) {
             for (int j = 0; j < TEXWIDTH; j++) {
-                if(i<86){
-                    texture0[i][j][0] = 255;
-                    texture0[i][j][1] = 0;
-                    texture0[i][j][2] = 0;
-                }
-                else if(i<172){
-                    texture0[i][j][0] = 0;
-                    texture0[i][j][1] = 255;
-                    texture0[i][j][2] = 0;
-                }
-                else{
-                    texture0[i][j][0] = 0;
-                    texture0[i][j][1] = 0;
-                    texture0[i][j][2] = 255;
-                }
+                yuv[i][j][0] = texture0[i][j][0] * 0.2126 + texture0[i][j][1] * 0.7152 + texture0[i][j][2] * 0.0722;
+                yuv[i][j][1] = texture0[i][j][0] * -0.114572 + texture0[i][j][1] * -0.385428 + texture0[i][j][2] * 0.5;
+                yuv[i][j][2] = texture0[i][j][0] * 0.5 + texture0[i][j][1] * -0.454153 + texture0[i][j][2] * -0.045847;
             }
     }
-
-    //RGB2YUV ちゃんとできてる
-    for (int i = 0; i < TEXHEIGHT; i++) {
-            for (int j = 0; j < TEXWIDTH; j++) {
-                // Y  =  0.257R + 0.504G + 0.098B + 16
-                // Cb = -0.148R - 0.291G + 0.439B + 128
-                // Cr =  0.439R - 0.368G - 0.071B + 128
-                yuv[i][j][0] = texture0[i][j][0] * 0.257 + texture0[i][j][1] * 0.504 + texture0[i][j][2] * 0.098 + 16;
-                yuv[i][j][1] = texture0[i][j][0] * -0.148 + texture0[i][j][1] * -0.291 + texture0[i][j][2] * 0.439 + 128;
-                yuv[i][j][2] = texture0[i][j][0] * 0.439 + texture0[i][j][1] * -0.368 + texture0[i][j][2] * -0.071 + 128;
-            }
-    }
-
-
-    //YUV2RGB
-    for (int i = 0; i < TEXHEIGHT; i++) {
-        for (int j = 0; j < TEXWIDTH; j++) {
-            // if(yuv[i][j][0] - 16 < 0){
-            //     std::cout << "yuv[i][j][0] - 16 < 0" << std::endl;
-            //     yuv[i][j][0] = yuv[i][j][0] + 255;
-            //     }
-            // if(yuv[i][j][1] - 128 < 0){
-            //     std::cout << "yuv[i][j][1] - 128 < 0" << std::endl;
-            //     yuv[i][j][1] = yuv[i][j][1] + 255;
-            //     }
-            // if(yuv[i][j][2] - 128 < 0){
-            //     std::cout << "yuv[i][j][2] - 128 < 0" << std::endl;
-            //     yuv[i][j][2] = yuv[i][j][2] + 255;
-            //     }
-
-            int y,u,v;
-            y = yuv[i][j][0] - 16;
-            u = yuv[i][j][1] - 128;
-            v = yuv[i][j][2] - 128;
-
-            // texture[i][j][0] = (yuv[i][j][0] - 16) * 1.164 +                                (yuv[i][j][2] - 128) * 1.596;
-            // texture[i][j][1] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * -0.391 + (yuv[i][j][2] - 128) * -0.813;
-            // texture[i][j][2] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * 2.018;
-
-            int R,G,B;
-
-            // texture[i][j][0] = y * 1.164 +                                v * 1.596;
-            // texture[i][j][1] = y * 1.164 + u * -0.391 + v * -0.813;
-            // texture[i][j][2] = y * 1.164 + u * 2.018;
-
-            R = y * 1.164 +                                v * 1.596;
-            G = y * 1.164 + u * -0.391 + v * -0.813;
-            B = y * 1.164 + u * 2.018;
-
-            if(R < 0){R = 0;} else if(R > 255){R = 255;}
-            if(G < 0){G = 0;} else if(G > 255){G = 255;}
-		    if(B < 0){B = 0;} else if(B > 255){B = 255;}
-
-
-            texture[i][j][0] = R;
-            texture[i][j][1] = G;
-            texture[i][j][2] = B;
-
-            // if(texture[i][j][0] < 0){texture[i][j][0] = 0;} else if(texture[i][j][0] > 255){texture[i][j][0] = 255;}
-            // if(texture[i][j][1] < 0){texture[i][j][1] = 0;} else if(texture[i][j][1] > 255){texture[i][j][1] = 255;}
-		    // if(texture[i][j][2] < 0){texture[i][j][2] = 0;} else if(texture[i][j][2] > 255){texture[i][j][2] = 255;}
-
-            if(((i==0)&&(j==0))||((i==87)&&(j==0))){
-                std::cout << "texture[i][j][0] = " << (int)texture[i][j][0] << std::endl;   
-                std::cout << "R Y = " << (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
-                std::cout << "R V = " << (int)(yuv[i][j][2] - 128) * 1.596 << std::endl;
-
-                std::cout << "texture[i][j][1] = " << (int)texture[i][j][1] << std::endl;
-                std::cout << "G Y = " << (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
-                std::cout << "G U = " << (int)(yuv[i][j][1] - 128) * -0.391 << std::endl;
-                std::cout << "G V = " << (int)(yuv[i][j][2] - 128) * -0.813 << std::endl;
-
-    		    if(texture[i][j][2] < 0){
-                std::cout << "texture[i][j][2] < 0" << std::endl;
-                    texture[i][j][2] = 0;
-                }else if(texture[i][j][2] > 255){
-                std::cout << " texture[i][j][2] > 255 " << std::endl;
-                    texture[i][j][2] = 255;
-                }
-
-                std::cout << "texture[0][0][2] = " << (int)texture[0][0][2] << std::endl;
-                std::cout << "B Y = " << (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
-                std::cout << "B U = " << (int)(yuv[i][j][1] - 128) * 2.018 << std::endl;
-                // std::cout << "yuv[0][0][1] = " << (int)yuv[0][0][1] << std::endl;
-                // std::cout << "yuv[0][0][2] = " << (int)yuv[0][0][2] << std::endl;
-            }
-
-            }
-    }
-
-    // std::cout << "yuv[0][0][0] = " << (int)yuv[0][0][0] << std::endl;
-    // std::cout << "yuv[0][0][1] = " << (int)yuv[0][0][1] << std::endl;
-    // std::cout << "yuv[0][0][2] = " << (int)yuv[0][0][2] << std::endl;
-
-    // std::cout << "yuv[87][0][0] = " << (int)yuv[87][0][0] << std::endl;
-    // std::cout << "yuv[87][0][1] = " << (int)yuv[87][0][1] << std::endl;
-    // std::cout << "yuv[87][0][2] = " << (int)yuv[87][0][2] << std::endl;
-
-    // std::cout << "yuv[173][0][0] = " << (int)yuv[173][0][0] << std::endl;
-    // std::cout << "yuv[173][0][1] = " << (int)yuv[173][0][1] << std::endl;
-    // std::cout << "yuv[173][0][2] = " << (int)yuv[173][0][2] << std::endl;
-
-    // std::cout << "texture[100][100][0] = " << (int)texture[100][100][0] << std::endl;
-    // std::cout << "texture[100][100][1] = " << (int)texture[100][100][1] << std::endl;
-    // std::cout << "texture[100][100][2] = " << (int)texture[100][100][2] << std::endl;
-
-    // std::cout << "texture[0][0][0] = " << (int)texture[0][0][0] << std::endl;
-    // std::cout << "texture[0][0][1] = " << (int)texture[0][0][1] << std::endl;
-    // std::cout << "texture[0][0][2] = " << (int)texture[0][0][2] << std::endl;
-
-    // std::cout << "texture[87][0][0] = " << (int)texture[87][0][0] << std::endl;
-    // std::cout << "texture[87][0][1] = " << (int)texture[87][0][1] << std::endl;
-    // std::cout << "texture[87][0][2] = " << (int)texture[87][0][2] << std::endl;
-
-    // std::cout << "texture[173][0][0] = " << (int)texture[173][0][0] << std::endl;
-    // std::cout << "texture[173][0][1] = " << (int)texture[173][0][1] << std::endl;
-    // std::cout << "texture[173][0][2] = " << (int)texture[173][0][2] << std::endl;
-
   }
 
+    std::cout << "yuv[100][100][0] = " << (int)yuv[100][100][0] << std::endl;
+    std::cout << "yuv[100][100][1] = " << (int)yuv[100][100][1] << std::endl;
+    std::cout << "yuv[100][100][2] = " << (int)yuv[100][100][2] << std::endl;
 
-//     for (int i = 0; i < TEXHEIGHT; i++) {
-//             for (int j = 0; j < TEXWIDTH; j++) {
-//                 texture[i][j][0] = (yuv[i][j][0] - 16) * 1.164 +                                (yuv[i][j][2] - 128) * 1.596;
-//                 texture[i][j][1] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * -0.391 + (yuv[i][j][2] - 128) * -0.813;
-//                 texture[i][j][2] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * 2.018;
+    for (int i = 0; i < TEXHEIGHT; i++) {
+            for (int j = 0; j < TEXWIDTH; j++) {
+                texture[i][j][0] = (yuv[i][j][0] - 16) * 1.164 +                                (yuv[i][j][2] - 128) * 1.596;
+                texture[i][j][1] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * -0.391 + (yuv[i][j][2] - 128) * -0.813;
+                texture[i][j][2] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * 2.018;
 
-//                 // texture[i][j][0] = yuv[i][j][0] * 1.164 +                         yuv[i][j][2] * 1.596;
-//                 // texture[i][j][1] = yuv[i][j][0] * 1.164 + yuv[i][j][1] * -0.391 + yuv[i][j][2] * -0.813;
-//                 // texture[i][j][2] = yuv[i][j][0] * 1.164 + yuv[i][j][1] * 2.018;
+                // texture[i][j][0] = yuv[i][j][0] * 1.164 +                         yuv[i][j][2] * 1.596;
+                // texture[i][j][1] = yuv[i][j][0] * 1.164 + yuv[i][j][1] * -0.391 + yuv[i][j][2] * -0.813;
+                // texture[i][j][2] = yuv[i][j][0] * 1.164 + yuv[i][j][1] * 2.018;
 
-//                 if(texture[i][j][0] < 0){texture[i][j][0] = 0;} else if(texture[i][j][0] > 255){texture[i][j][0] = 255;}
-//                 if(texture[i][j][1] < 0){texture[i][j][1] = 0;} else if(texture[i][j][1] > 255){texture[i][j][1] = 255;}
-// 		        if(texture[i][j][2] < 0){texture[i][j][2] = 0;} else if(texture[i][j][2] > 255){texture[i][j][2] = 255;}
-//             }
-//     }
+                if(texture[i][j][0] < 0){texture[i][j][0] = 0;} else if(texture[i][j][0] > 255){texture[i][j][0] = 255;}
+                if(texture[i][j][1] < 0){texture[i][j][1] = 0;} else if(texture[i][j][1] > 255){texture[i][j][1] = 255;}
+		        if(texture[i][j][2] < 0){texture[i][j][2] = 0;} else if(texture[i][j][2] > 255){texture[i][j][2] = 255;}
+            }
+    }
 
-//     // std::cout << "texture create" << std::endl;
-
+    // std::cout << "texture create" << std::endl;
+    std::cout << "texture[100][100][0] = " << (int)texture[100][100][0] << std::endl;
+    std::cout << "texture[100][100][1] = " << (int)texture[100][100][1] << std::endl;
+    std::cout << "texture[100][100][2] = " << (int)texture[100][100][2] << std::endl;
 }
 
 
@@ -265,7 +139,7 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
         "uniform sampler2D Texture;\n"
 		"void main() {\n"
             "outFragmentColor = texture2D( Texture, Flag_uv );\n"
-            // "outFragmentColor = vec4(0.3, 0.8, 0.3, 1.0);\n"
+            "outFragmentColor = vec4(0.3, 0.8, 0.3, 1.0);\n"
 		"}\n";
 	// const char* fshader =
 	// 	"#version 300 es\n"

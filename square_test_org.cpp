@@ -1,16 +1,103 @@
-#include "square_test.h"
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <GLES3/gl3.h>
+#include <EGL/egl.h>
+#include <iostream>
+#include <unistd.h>
+#include <math.h>
+#include <algorithm>
+#include <fstream>
+#include <stdlib.h>
+#define degree2radian(degree) ((degree * M_PI) / 180.0F)
 
+
+#define TEXHEIGHT   256
+#define TEXWIDTH    256
+GLubyte texture[TEXHEIGHT][TEXWIDTH][3];
+// GLubyte ***texture;
+
+// typedef const char GLbyte;
+
+// Handle to a program object
+GLuint programObject;
+GLuint program;
+GLuint g_vbo;
+GLuint g_ibo;
+// Attribute locations
+GLint  positionLoc;
+GLint  texCoordLoc;
+// Sampler location
+GLint samplerLoc;
+// Texture handle
+GLuint textureId;
+
+
+int LoadFile(char *filename);
+void LoadFile_2();
+void save();
+GLuint CreateSimpleTexture2D();
+void destroyEGL(EGLDisplay &display, EGLContext &context, EGLSurface &surface);
+int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLContext &context, EGLSurface &surface);
+void init();
+void createBuffer();
+void Draw();
+void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface);
+GLuint loadShader(GLenum shaderType, const char *source);
+GLuint createProgram(const char *vshader, const char *fshader);
+void deleteShaderProgram(GLuint shaderProgram);
+
+typedef unsigned char BYTE;
+typedef unsigned short WORD;
+typedef unsigned int DWORD;
+
+#pragma pack(1)
+typedef struct {
+    WORD  Type;
+    DWORD Size;
+    WORD  Reserved1;
+    WORD  Reserved2;
+    DWORD OffBits;
+} BitMapFileHeader_t;
+
+typedef struct {
+    DWORD Size;
+    DWORD Width;
+    DWORD Height;
+    WORD  Planes;
+    WORD  BitCount;
+    DWORD Compression;
+    DWORD SizeImage;
+    DWORD XPixPerMeter;
+    DWORD YPixPerMeter;
+    DWORD ClrUsed;
+    DWORD ClrImportant;
+} BitMapInfoHeader_t;
+
+typedef struct {
+    BitMapFileHeader_t File;
+    BitMapInfoHeader_t Info;
+} BitMap_t;
 //g++ EGL_test.cpp -o EGL_test -lX11 -lEGL -lGL
 
 int main()
 {
+    // texture = (GLubyte***)malloc(TEXWIDTH*TEXHEIGHT*3*(sizeof(GLubyte**)));
+
+    // for (int i = 0; i < TEXWIDTH; i++) {
+    //     texture[i] = (GLubyte **)malloc(TEXHEIGHT * sizeof(GLubyte *));
+    //     for (int j = 0; j < TEXHEIGHT; j++){
+    //         texture[i][j] = (GLubyte*)malloc(3 * sizeof(GLubyte));
+    //     }
+    // }
+
     Display *xdisplay = XOpenDisplay(nullptr);
-    Window xwindow = XCreateSimpleWindow(xdisplay, DefaultRootWindow(xdisplay), 100, 100, 960, 540,
+    Window xwindow = XCreateSimpleWindow(xdisplay, DefaultRootWindow(xdisplay), 100, 100, 960, 720,
                                          1, BlackPixel(xdisplay, 0), WhitePixel(xdisplay, 0));
 
     XMapWindow(xdisplay, xwindow);
 
     int size = LoadFile("./num256.bmp");
+    // LoadFile_2();
 
     EGLDisplay display = nullptr;
     EGLContext context = nullptr;
@@ -44,8 +131,15 @@ int LoadFile(char *filename)
     //動的にファイルサイズを取得できるようにする。
     // n_read = fread(texture, 1, sizeof texture, fp);
     // n_read = fread(texture, 1, 262198, fp);
-    // n_read = fread(texture, 1, 66614, fp);
+    // n_read = fread(texture, 1, 270054, fp);
     n_read = fread(texture, 1, 196662, fp);
+
+    // for (int i = 0; i < TEXWIDTH; i++) {
+    //     for (int j = 0; j <TEXHEIGHT; j++)
+    //     {
+    //         std::cout << "texture[" << i << "][" << j << "][2] = " << texture[i][j][2] << std::endl;
+    //     }
+    // }
     
     fclose(fp);
   }
@@ -53,6 +147,68 @@ int LoadFile(char *filename)
   return n_read;
 }
 
+/*
+void LoadFile_2()
+{
+    // unsigned char *img;
+    // img = (unsigned char*)malloc(width*height*3*sizeof(unsigned char));
+
+    // for (int i = 0; i < width * height*3; i+=3) {
+    //     img[i+0] = 0;  // Blue
+    //     img[i+1] = i;  // Green
+    //     img[i+2] = 0;  // Red
+    // }
+
+
+    for (int i = 0; i < TEXWIDTH; i++) {
+        for (int j = 0; j <TEXHEIGHT; j++)
+        {
+            texture[i][j][0] = 0x00;      //R
+            texture[i][j][1] = 0x00;      //G
+            texture[i][j][2] = 0xFF;       //B
+        }
+    }
+
+    save();
+
+    for (int i = 0; i < TEXWIDTH; i++) {
+        for (int j = 0; j <TEXHEIGHT; j++)
+        {
+            std::cout << "texture[" << i << "][" << j << "][2] = " << texture[i][j][2] << std::endl;
+        }
+    }
+}
+
+void save(){
+    FILE *fp;
+    BitMap_t bitmap;
+
+    bitmap.File.Type = 19778;
+    bitmap.File.Size = 14 + 40 + TEXWIDTH*TEXHEIGHT*3;
+    std::cout << "bitmap.File.Size = " << bitmap.File.Size << std::endl;
+
+    bitmap.File.Reserved1 = 0;
+    bitmap.File.Reserved2 = 0;
+    bitmap.File.OffBits = 14 + 40;
+
+    bitmap.Info.Size = 40;
+    bitmap.Info.Width = TEXWIDTH;
+    bitmap.Info.Height = TEXHEIGHT;
+    bitmap.Info.Planes = 1;
+    bitmap.Info.BitCount = 24;
+    bitmap.Info.Compression = 0;
+    bitmap.Info.SizeImage = 0;
+    bitmap.Info.XPixPerMeter = 0;
+    bitmap.Info.YPixPerMeter = 0;
+    bitmap.Info.ClrUsed = 0;
+    bitmap.Info.ClrImportant = 0;
+
+    fp = fopen("output_2.bmp", "wb");
+    fwrite(&bitmap, sizeof(bitmap), 1, fp);
+    fwrite(texture, sizeof(*texture)*TEXWIDTH*TEXHEIGHT*3, 1, fp);
+    fclose(fp);
+};
+*/
 
 int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLContext &context, EGLSurface &surface)
 {
@@ -83,16 +239,6 @@ int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLConte
 
 void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 {
-	const char* shader =
-		"#version 300 es\n"
-		// "layout(location = 0) in vec3 position;\n"
-		// "layout(location = 1) in vec2 vuv;\n"
-        "out vec2 Flag_uv;\n"
-		"void main(void) {\n"
-            "Flag_uv  = vec2(0,0);\n"
-			"gl_Position = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
-		"}\n";
-
 	const char* vshader =
 		"#version 300 es\n"
 		"layout(location = 0) in vec3 position;\n"
@@ -111,39 +257,41 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 		"out vec4 outFragmentColor;\n"
         "uniform sampler2D Texture;\n"
 		"void main() {\n"
+            // "vec3 test = texture2D( Texture, Flag_uv ).xyz;\n"
             // "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+            // "outFragmentColor = vec4( test, 1 );\n"
             "vec3 yuv = texture( Texture, Flag_uv ).rgb;\n"
-            "outFragmentColor.x = (float(298)*(yuv.x-float(16))+float(409)*(yuv.z-float(128)+float(128))/float(256);\n"
-            "outFragmentColor.y = (float(298)*(yuv.x-float(16))-float(100)*(yuv.y-float(128)-float(208)*(yuv.z-float(128))+float(128))/float(256);\n"
-            "outFragmentColor.z = (float(298)*(yuv.x-float(16))+float(516)*(yuv.y-float(128)+float(128))/float(256);\n"
-            "if(outFragmentColor.x < 0){outFragmentColor.x = 0;} else if(outFragmentColor.x > 255){outFragmentColor.x = 255;}\n"
-            "if(outFragmentColor.y < 0){outFragmentColor.y = 0;} else if(outFragmentColor.y > 255){outFragmentColor.y = 255;}\n"
-		    "if(outFragmentColor.z < 0){outFragmentColor.z = 0;} else if(outFragmentColor.z > 255){outFragmentColor.z = 255;}\n"
-        "}\n";
+            "outFragmentColor.x = (float(298)*(yuv.x-float(16))+float(409)*(yuv.z-float(128)+float(128))/float(256));\n"
+            "outFragmentColor.y = (float(298)*(yuv.x-float(16))-float(100)*(yuv.y-float(128)-float(208)*(yuv.z-float(128))+float(128))/float(256));\n"
+            "outFragmentColor.z = (float(298)*(yuv.x-float(16))+float(516)*(yuv.y-float(128)+float(128))/float(256));\n"
+            // "if(outFragmentColor.x < 0){outFragmentColor.x = 0;} else if(outFragmentColor.x > 255){outFragmentColor.x = 255;}\n"
+            // "if(outFragmentColor.y < 0){outFragmentColor.y = 0;} else if(outFragmentColor.y > 255){outFragmentColor.y = 255;}\n"
+		    // "if(outFragmentColor.z < 0){outFragmentColor.z = 0;} else if(outFragmentColor.z > 255){outFragmentColor.z = 255;}\n"
+		"}\n";
 
 
 	GLfloat points[] = {
-                    -0.5f, 0.5f, 0.0f, 
-				    -0.5f, -0.5f, 0.0f, 
-				    0.5f, -0.5f,  0.0f,
-				    0.5f, 0.5f, 0.0f
+                    -1.0f, 0.5f, 0.0f, 
+				    -1.0f, -0.5f, 0.0f, 
+				    -0.2f, -0.5f,  0.0f,
+				    -0.2f, 0.5f, 0.0f,
 
-                // 0.3f, 0.8f, 0.0f,//四角形2つ目
-    			// 0.5f, -0.3f, 0.0f,
-	    		// -0.7f, 0.5f, 0.0f,
-		    	// -0.2f, -0.2f, 0.0f
+                    1.0f, 0.5f, 0.0f, 
+				    1.0f, -0.5f, 0.0f, 
+				    0.2f, -0.5f,  0.0f,
+				    0.2f, 0.5f, 0.0f,
                 };
 
 
-	GLfloat colors[] = { 0.5f, 0.0f, 0.3f,
-				 0.5f, 0.8f, 0.0f,
-				 1.0f, 0.0f, 1.0f,
-				 1.0f, 0.8f, 1.0f,
+	// GLfloat colors[] = { 0.5f, 0.0f, 0.3f,
+	// 			 0.5f, 0.8f, 0.0f,
+	// 			 1.0f, 0.0f, 1.0f,
+	// 			 1.0f, 0.8f, 1.0f,
 
-                0.5f, 0.0f, 1.0f,//四角形2つ目
-                0.5f, 0.3f, 0.5f,
-                1.0f, 0.0f, 1.0f,
-                0.2f, 0.1f, 1.0f };
+    //             0.5f, 0.0f, 1.0f,//四角形2つ目
+    //             0.5f, 0.3f, 0.5f,
+    //             1.0f, 0.0f, 1.0f,
+    //             0.2f, 0.1f, 1.0f };
 
     GLfloat vertex_uv[] = { 
                 0.0f, 1.0f,
@@ -158,9 +306,7 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
     //           0.0f, 0.0f,
     //           };                
 
-    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-
-    GLuint Shader = loadShader(GL_VERTEX_SHADER, vshader);
+    GLushort indices[] = { 0, 1, 2, 0, 2, 3, 4,5,6, 4,6,7 };
 
     GLuint program = createProgram(vshader, fshader);
 
@@ -242,7 +388,7 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
         // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         // glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
         // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+        glDrawElements ( GL_TRIANGLES, 12, GL_UNSIGNED_SHORT, indices );
 
         eglSwapBuffers(display, surface);
         // degree = (degree + 1) % 360;
@@ -263,9 +409,9 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 GLuint createProgram(const char *vshader, const char *fshader)
 {
     GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vshader);
-    // std::cout << "vshader = " << vshader << std::endl;
+    std::cout << "vshader = " << vshader << std::endl;
     GLuint fragShader = loadShader(GL_FRAGMENT_SHADER, fshader);
-    // std::cout << "fshader = " << fshader << std::endl;
+    std::cout << "fshader = " << fshader << std::endl;
     GLuint program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragShader);
@@ -288,22 +434,21 @@ GLuint loadShader(GLenum shaderType, const char *source)
     glShaderSource(shader, 1, &source, nullptr);
     glCompileShader(shader);
 
-    GLsizei max = 1000;
-    GLsizei length;
-    GLchar infolog[1000];
+    GLint max = 1000;
+    GLchar *infolog;
+
+    glGetShaderInfoLog(shader, max, &max, infolog);
+    std::cout << " infolog \n" << infolog << std::endl;
 
     GLint compiled = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     if (compiled == GL_FALSE)
     {
         std::cerr << "Error glCompileShader." << std::endl;
-        glGetShaderInfoLog(shader, max, &max, infolog);
-        std::cout << " infolog \n" << infolog << std::endl;
-        // exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
     return shader;
 }
-
 
 void destroyEGL(EGLDisplay &display, EGLContext &context, EGLSurface &surface)
 {
@@ -316,3 +461,4 @@ void deleteShaderProgram(GLuint shaderProgram)
 {
     glDeleteProgram(shaderProgram);
 }
+

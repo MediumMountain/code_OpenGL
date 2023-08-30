@@ -1,4 +1,46 @@
-#include "square_test.h"
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <GLES3/gl3.h>
+#include <EGL/egl.h>
+#include <iostream>
+#include <unistd.h>
+#include <math.h>
+#include <algorithm>
+#define degree2radian(degree) ((degree * M_PI) / 180.0F)
+
+
+#define TEXHEIGHT   256
+#define TEXWIDTH    256
+GLubyte texture[TEXHEIGHT][TEXWIDTH][3];
+
+// typedef const char GLbyte;
+
+// Handle to a program object
+GLuint programObject;
+GLuint program;
+GLuint g_vbo;
+GLuint g_ibo;
+// Attribute locations
+GLint  positionLoc;
+GLint  texCoordLoc;
+// Sampler location
+GLint samplerLoc;
+// Texture handle
+GLuint textureId;
+
+
+int LoadFile(char *filename);
+GLuint CreateSimpleTexture2D();
+void destroyEGL(EGLDisplay &display, EGLContext &context, EGLSurface &surface);
+int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLContext &context, EGLSurface &surface);
+void init();
+void createBuffer();
+void Draw();
+void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface);
+GLuint loadShader(GLenum shaderType, const char *source);
+GLuint createProgram(const char *vshader, const char *fshader);
+void deleteShaderProgram(GLuint shaderProgram);
+
 
 //g++ EGL_test.cpp -o EGL_test -lX11 -lEGL -lGL
 
@@ -111,15 +153,8 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 		"out vec4 outFragmentColor;\n"
         "uniform sampler2D Texture;\n"
 		"void main() {\n"
-            // "outFragmentColor = texture2D( Texture, Flag_uv );\n"
-            "vec3 yuv = texture( Texture, Flag_uv ).rgb;\n"
-            "outFragmentColor.x = (float(298)*(yuv.x-float(16))+float(409)*(yuv.z-float(128)+float(128))/float(256);\n"
-            "outFragmentColor.y = (float(298)*(yuv.x-float(16))-float(100)*(yuv.y-float(128)-float(208)*(yuv.z-float(128))+float(128))/float(256);\n"
-            "outFragmentColor.z = (float(298)*(yuv.x-float(16))+float(516)*(yuv.y-float(128)+float(128))/float(256);\n"
-            "if(outFragmentColor.x < 0){outFragmentColor.x = 0;} else if(outFragmentColor.x > 255){outFragmentColor.x = 255;}\n"
-            "if(outFragmentColor.y < 0){outFragmentColor.y = 0;} else if(outFragmentColor.y > 255){outFragmentColor.y = 255;}\n"
-		    "if(outFragmentColor.z < 0){outFragmentColor.z = 0;} else if(outFragmentColor.z > 255){outFragmentColor.z = 255;}\n"
-        "}\n";
+            "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+		"}\n";
 
 
 	GLfloat points[] = {
@@ -287,23 +322,15 @@ GLuint loadShader(GLenum shaderType, const char *source)
     GLuint shader = glCreateShader(shaderType);
     glShaderSource(shader, 1, &source, nullptr);
     glCompileShader(shader);
-
-    GLsizei max = 1000;
-    GLsizei length;
-    GLchar infolog[1000];
-
     GLint compiled = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     if (compiled == GL_FALSE)
     {
         std::cerr << "Error glCompileShader." << std::endl;
-        glGetShaderInfoLog(shader, max, &max, infolog);
-        std::cout << " infolog \n" << infolog << std::endl;
-        // exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
     return shader;
 }
-
 
 void destroyEGL(EGLDisplay &display, EGLContext &context, EGLSurface &surface)
 {
