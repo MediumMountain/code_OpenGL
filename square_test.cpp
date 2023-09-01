@@ -111,14 +111,14 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 		"out vec4 outFragmentColor;\n"
         "uniform sampler2D Texture;\n"
 		"void main() {\n"
-            // "outFragmentColor = texture2D( Texture, Flag_uv );\n"
-            "vec3 yuv = texture( Texture, Flag_uv ).rgb;\n"
-            "outFragmentColor.x = (float(298)*(yuv.x-float(16))+float(409)*(yuv.z-float(128)+float(128))/float(256);\n"
-            "outFragmentColor.y = (float(298)*(yuv.x-float(16))-float(100)*(yuv.y-float(128)-float(208)*(yuv.z-float(128))+float(128))/float(256);\n"
-            "outFragmentColor.z = (float(298)*(yuv.x-float(16))+float(516)*(yuv.y-float(128)+float(128))/float(256);\n"
-            "if(outFragmentColor.x < 0){outFragmentColor.x = 0;} else if(outFragmentColor.x > 255){outFragmentColor.x = 255;}\n"
-            "if(outFragmentColor.y < 0){outFragmentColor.y = 0;} else if(outFragmentColor.y > 255){outFragmentColor.y = 255;}\n"
-		    "if(outFragmentColor.z < 0){outFragmentColor.z = 0;} else if(outFragmentColor.z > 255){outFragmentColor.z = 255;}\n"
+            "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+        //     "vec3 yuv = texture( Texture, Flag_uv ).rgb;\n"
+        //     "outFragmentColor.x = (float(298)*(yuv.x-float(16))+float(409)*(yuv.z-float(128)+float(128))/float(256);\n"
+        //     "outFragmentColor.y = (float(298)*(yuv.x-float(16))-float(100)*(yuv.y-float(128)-float(208)*(yuv.z-float(128))+float(128))/float(256);\n"
+        //     "outFragmentColor.z = (float(298)*(yuv.x-float(16))+float(516)*(yuv.y-float(128)+float(128))/float(256);\n"
+        //     "if(outFragmentColor.x < 0){outFragmentColor.x = 0;} else if(outFragmentColor.x > 255){outFragmentColor.x = 255;}\n"
+        //     "if(outFragmentColor.y < 0){outFragmentColor.y = 0;} else if(outFragmentColor.y > 255){outFragmentColor.y = 255;}\n"
+		//     "if(outFragmentColor.z < 0){outFragmentColor.z = 0;} else if(outFragmentColor.z > 255){outFragmentColor.z = 255;}\n"
         "}\n";
 
 
