@@ -202,6 +202,8 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
     GLint gmSamplerHandle = glGetUniformLocation(program, "s_texture");
     GLint gmRotationHandle = glGetUniformLocation(program, "mRotation");
 
+    // glEnable(GL_DEPTH_TEST);
+
     // Use tightly packed data
     glPixelStorei ( GL_UNPACK_ALIGNMENT, 1 );
 
@@ -221,35 +223,35 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
     glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, TEXWIDTH, TEXHEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 
     int degree = 0;
-    // int degree = (degree + 100) % 360;
+    // int degree = (5 + 100) % 360;
     while (true)
     {
         XPending(xdisplay);
 
-        // const GLfloat matrix[] = {
-        // static_cast<GLfloat>(cos(degree2radian(degree))), 0.0f, static_cast<GLfloat>(sin(degree2radian(degree))), 0.0f,
-        // 0.0f, 1.0f, 0.0f, 0.0f,
-        // static_cast<GLfloat>(-sin(degree2radian(degree))), 0.0f, static_cast<GLfloat>(cos(degree2radian(degree))), 0.0f,
-        // 0.0f, 0.0f, 0.0f, 1.0f};
-
         const GLfloat matrix[] = {
-        static_cast<GLfloat>(cos(degree2radian(degree))), 
-        0.0f, 
-        static_cast<GLfloat>(sin(degree2radian(degree))), 
-        0.0f,
-        0.0f, 
-        1.0f, 
-        0.0f, 
-        0.0f,
-        static_cast<GLfloat>(-sin(degree2radian(degree))), 
-        0.0f, 
-        static_cast<GLfloat>(cos(degree2radian(degree))), 
-        0.0f,
-        0.0f, 
-        0.0f, 
-        0.0f, 
-        1.0f
-        };
+        static_cast<GLfloat>(cos(degree2radian(degree))), 0.0f, static_cast<GLfloat>(sin(degree2radian(degree))), 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        static_cast<GLfloat>(-sin(degree2radian(degree))), 0.0f, static_cast<GLfloat>(cos(degree2radian(degree))), 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f};
+
+        // const GLfloat matrix[] = {
+        // static_cast<GLfloat>(cos(degree2radian(degree))), 
+        // 0.0f, 
+        // static_cast<GLfloat>(sin(degree2radian(degree))), 
+        // 0.0f,
+        // 0.0f, 
+        // 1.0f, 
+        // 0.0f, 
+        // 0.0f,
+        // static_cast<GLfloat>(-sin(degree2radian(degree))), 
+        // 0.0f, 
+        // static_cast<GLfloat>(cos(degree2radian(degree))), 
+        // 0.0f,
+        // 0.0f, 
+        // 0.0f, 
+        // 0.0f, 
+        // 1.0f
+        // };
 
         glClearColor(0.25f, 0.25f, 0.5f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -276,7 +278,7 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
         // glDrawArrays(GL_TRIANGLES, 0, 3);
 
         eglSwapBuffers(display, surface);
-        // degree = (degree + 1) % 360;
+        degree = (degree + 1) % 360;
         usleep(1000);
     }
     deleteShaderProgram(program);
