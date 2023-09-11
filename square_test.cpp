@@ -1,6 +1,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #include <EGL/egl.h>
 #include <iostream>
 #include <unistd.h>
@@ -47,21 +47,12 @@ void deleteShaderProgram(GLuint shaderProgram);
 int main()
 {
     Display *xdisplay = XOpenDisplay(nullptr);
-    if (xdisplay == nullptr)
-    {
-        std::cerr << "Error XOpenDisplay." << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
     Window xwindow = XCreateSimpleWindow(xdisplay, DefaultRootWindow(xdisplay), 100, 100, 960, 540,
                                          1, BlackPixel(xdisplay, 0), WhitePixel(xdisplay, 0));
 
     XMapWindow(xdisplay, xwindow);
 
-    //画像読み込み
-    char path[] = "./num256.bmp";
-    int size = LoadFile(path);
-    printf("LoadFile %d \n", size);
+    int size = LoadFile("./num256.bmp");
 
     EGLDisplay display = nullptr;
     EGLContext context = nullptr;
@@ -108,11 +99,6 @@ int LoadFile(char *filename)
 int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLContext &context, EGLSurface &surface)
 {
     display = eglGetDisplay(static_cast<EGLNativeDisplayType>(xdisp));
-    if (display == EGL_NO_DISPLAY)
-    {
-        std::cerr << "Error eglGetDisplay." << std::endl;
-        return -1;
-    }
     if (!eglInitialize(display, nullptr, nullptr))
     {
         std::cerr << "Error eglInitialize." << std::endl;
@@ -128,26 +114,10 @@ int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLConte
         return -1;
     }
 
-    if (numConfigs != 1)
-    {
-        std::cerr << "Error numConfigs." << std::endl;
-        return -1;
-    }
-
     surface = eglCreateWindowSurface(display, config, xwindow, nullptr);
-    if (surface == EGL_NO_SURFACE)
-    {
-        std::cerr << "Error eglCreateWindowSurface. " << eglGetError() << std::endl;
-        return -1;
-    }
 
     EGLint ctxattr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
     context = eglCreateContext(display, config, EGL_NO_CONTEXT, ctxattr);
-    if (context == EGL_NO_CONTEXT)
-    {
-        std::cerr << "Error eglCreateContext. " << eglGetError() << std::endl;
-        return -1;
-    }
     eglMakeCurrent(display, surface, surface, context);
 
     return 0;
@@ -155,54 +125,194 @@ int initializeEGL(Display *xdisp, Window &xwindow, EGLDisplay &display, EGLConte
 
 void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 {
-    const char *vshader = R"(
-        attribute vec4 vPosition;
-        attribute vec2 a_texCoord;
-        varying vec2 v_texCoord;
-        uniform mediump mat4 mRotation;
-        void main() {
-            gl_Position = mRotation * vPosition;
-            v_texCoord  = a_texCoord;
-        }
-    )";
+	// const char* vshader =
+	// 	"#version 300 es\n"
+	// 	"layout(location = 0) in vec3 position;\n"
+	// 	"layout(location = 1) in vec2 vuv;\n"
+    //     "out vec2 Flag_uv;\n"
+	// 	"void main(void) {\n"
+    //         "Flag_uv  = vuv;\n"
+	// 		"gl_Position = vec4(position, 1.0f);\n"
+	// 	"}\n";
 
-    const char *fshader = R"(
-        precision mediump float;
-        varying vec2 v_texCoord;
-        uniform sampler2D s_texture;
-        void main() {
-            gl_FragColor = texture2D( s_texture, v_texCoord );
-        }
-    )";
 
-    // const char *fshader = R"(
-    //     precision mediump float;
-    //     void main() {
-    //         gl_FragColor = vec4(0.3, 0.8, 0.3, 1.0);
-    //     }
-    // )";
+	// const char* fshader =
+	// 	"#version 300 es\n"
+    //     "precision mediump float;"
+    //     "in vec2 Flag_uv;\n"
+	// 	"out vec4 outFragmentColor;\n"
+    //     "uniform sampler2D Texture;\n"
+	// 	"void main() {\n"
+    //         "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+	// 	"}\n";
 
-   GLfloat vVertices[] = { -0.5f,  0.5f, 0.0f,  // Position 0
-                            0.0f,  1.0f,        // TexCoord 0 
-                           -0.5f, -0.5f, 0.0f,  // Position 1
-                            0.0f,  0.0f,        // TexCoord 1
-                            0.5f, -0.5f, 0.0f,  // Position 2
-                            1.0f,  0.0f,        // TexCoord 2
-                            0.5f,  0.5f, 0.0f,  // Position 3
-                            1.0f,  1.0f         // TexCoord 3
-                         };
 
-   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+	const char* vshader =
+		"#version 300 es\n"
+        "layout(location = 0) in vec3 vertexPosition_modelspace;"
+        "layout(location = 1) in vec3 vertexColor;"
+        // "out vec2 Flag_uv;\n"
+        "out vec3 fragmentColor;"
+        // "uniform mat4 MVP;"
+		"void main(void) {\n"
+            // "Flag_uv  = vuv;\n"
+			// "gl_Position = vec4(position, 1.0f);\n"
+            // "gl_Position =  MVP * vec4(vertexPosition_modelspace,1);"
+            "gl_Position =  vec4(vertexPosition_modelspace,1);"
+            "fragmentColor = vertexColor;"
+		"}\n";
 
+
+	const char* fshader =
+		"#version 300 es\n"
+        "precision mediump float;"
+        // "in vec2 Flag_uv;\n"
+		"out vec4 outFragmentColor;\n"
+        // "uniform sampler2D Texture;\n"
+		"void main() {\n"
+            // "outFragmentColor = texture2D( Texture, Flag_uv );\n"
+            "outFragmentColor = fragmentColor;"
+		"}\n";
+
+	GLfloat points[] = {
+                    -0.5f, 0.5f, 0.0f, 
+				    -0.5f, -0.5f, 0.0f, 
+				    0.5f, 0.5f,  0.0f,
+				    0.5f, 0.5f, 0.0f
+
+                // 0.3f, 0.8f, 0.0f,//四角形2つ目
+    			// 0.5f, -0.3f, 0.0f,
+	    		// -0.7f, 0.5f, 0.0f,
+		    	// -0.2f, -0.2f, 0.0f
+                };
+
+    GLfloat g_vertex_buffer_data[] = {
+    -1.0f,-1.0f,-1.0f, // 三角形1:開始
+    -1.0f,-1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f, // 三角形1:終了
+    1.0f, 1.0f,-1.0f, // 三角形2:開始
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f, // 三角形2:終了
+    1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f,-1.0f,
+    1.0f,-1.0f,-1.0f,
+    1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f,-1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f,-1.0f,-1.0f,
+    1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f,-1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+    1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+    -1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f
+};
+
+	GLfloat colors[] = { 0.5f, 0.0f, 0.3f,
+				 0.5f, 0.8f, 0.0f,
+				 1.0f, 0.0f, 1.0f,
+				 1.0f, 0.8f, 1.0f,
+
+                0.5f, 0.0f, 1.0f,//四角形2つ目
+                0.5f, 0.3f, 0.5f,
+                1.0f, 0.0f, 1.0f,
+                0.2f, 0.1f, 1.0f };
+
+GLfloat g_color_buffer_data[] = {
+    0.583f,  0.771f,  0.014f,
+    0.609f,  0.115f,  0.436f,
+    0.327f,  0.483f,  0.844f,
+    0.822f,  0.569f,  0.201f,
+    0.435f,  0.602f,  0.223f,
+    0.310f,  0.747f,  0.185f,
+    0.597f,  0.770f,  0.761f,
+    0.559f,  0.436f,  0.730f,
+    0.359f,  0.583f,  0.152f,
+    0.483f,  0.596f,  0.789f,
+    0.559f,  0.861f,  0.639f,
+    0.195f,  0.548f,  0.859f,
+    0.014f,  0.184f,  0.576f,
+    0.771f,  0.328f,  0.970f,
+    0.406f,  0.615f,  0.116f,
+    0.676f,  0.977f,  0.133f,
+    0.971f,  0.572f,  0.833f,
+    0.140f,  0.616f,  0.489f,
+    0.997f,  0.513f,  0.064f,
+    0.945f,  0.719f,  0.592f,
+    0.543f,  0.021f,  0.978f,
+    0.279f,  0.317f,  0.505f,
+    0.167f,  0.620f,  0.077f,
+    0.347f,  0.857f,  0.137f,
+    0.055f,  0.953f,  0.042f,
+    0.714f,  0.505f,  0.345f,
+    0.783f,  0.290f,  0.734f,
+    0.722f,  0.645f,  0.174f,
+    0.302f,  0.455f,  0.848f,
+    0.225f,  0.587f,  0.040f,
+    0.517f,  0.713f,  0.338f,
+    0.053f,  0.959f,  0.120f,
+    0.393f,  0.621f,  0.362f,
+    0.673f,  0.211f,  0.457f,
+    0.820f,  0.883f,  0.371f,
+    0.982f,  0.099f,  0.879f
+};
+
+    GLfloat vertex_uv[] = { 
+                0.0f, 1.0f,
+                0.0f, 0.0f,
+                1.0f, 0.0f,
+                1.0f, 1.0f,
+                };
+
+    // GLfloat vertex_uv[] = { 1.0f, 0.0f,
+    //           1.0f, 1.0f,
+    //           0.0f, 1.0f,
+    //           0.0f, 0.0f,
+    //           };                
+
+    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
     GLuint program = createProgram(vshader, fshader);
-    glUseProgram(program);
-    GLint gvPositionHandle = glGetAttribLocation(program, "vPosition");
-    GLint gvTexCoordHandle = glGetAttribLocation(program, "a_texCoord" );
 
-    GLint gmSamplerHandle = glGetUniformLocation(program, "s_texture");
-    GLint gmRotationHandle = glGetUniformLocation(program, "mRotation");
+    GLuint vao, vertex_vbo, texture_vbo;
 
-    // glEnable(GL_DEPTH_TEST);
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	// 頂点座標のVBOを作成	
+	glGenBuffers(1, &vertex_vbo); //バッファを作成
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_vbo); //以下よりvertex_vboでバインドされているバッファが処理される
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW); //実データを格納
+
+	// glGenBuffers(1, &texture_vbo); //バッファを作成
+	// glBindBuffer(GL_ARRAY_BUFFER, texture_vbo); //以下よりvertex_vboでバインドされているバッファが処理される
+	// glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_uv), vertex_uv, GL_STATIC_DRAW); //実データを格納
+
+	GLuint colorbuffer;
+	glGenBuffers(1, &colorbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+
+    
+    // 追加：テクスチャ情報を送るuniform属性を設定する
+    GLint textureLocation = glGetUniformLocation(program, "texture");
+
 
     // Use tightly packed data
     glPixelStorei ( GL_UNPACK_ALIGNMENT, 1 );
@@ -222,63 +332,52 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 
     glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, TEXWIDTH, TEXHEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 
+
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // glBindVertexArray(0);
+
     int degree = 0;
-    // int degree = (5 + 100) % 360;
     while (true)
     {
         XPending(xdisplay);
 
-        const GLfloat matrix[] = {
-        static_cast<GLfloat>(cos(degree2radian(degree))), 0.0f, static_cast<GLfloat>(sin(degree2radian(degree))), 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        static_cast<GLfloat>(-sin(degree2radian(degree))), 0.0f, static_cast<GLfloat>(cos(degree2radian(degree))), 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f};
-
-        // const GLfloat matrix[] = {
-        // static_cast<GLfloat>(cos(degree2radian(degree))), 
-        // 0.0f, 
-        // static_cast<GLfloat>(sin(degree2radian(degree))), 
-        // 0.0f,
-        // 0.0f, 
-        // 1.0f, 
-        // 0.0f, 
-        // 0.0f,
-        // static_cast<GLfloat>(-sin(degree2radian(degree))), 
-        // 0.0f, 
-        // static_cast<GLfloat>(cos(degree2radian(degree))), 
-        // 0.0f,
-        // 0.0f, 
-        // 0.0f, 
-        // 0.0f, 
-        // 1.0f
-        // };
-
         glClearColor(0.25f, 0.25f, 0.5f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // glVertexAttribPointer(gvPositionHandle, 2, GL_FLOAT, GL_FALSE, 0, vertices);
 
-        // Load the vertex position
-        glVertexAttribPointer ( gvPositionHandle, 3, GL_FLOAT, 
-                                GL_FALSE, 5 * sizeof(GLfloat), vVertices );
-        // Load the texture coordinate
-        glVertexAttribPointer ( gvTexCoordHandle, 2, GL_FLOAT,
-                                GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3] );
+        glUseProgram(program);
 
-        glEnableVertexAttribArray ( gvPositionHandle );
-        glEnableVertexAttribArray ( gvTexCoordHandle );
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_vbo);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+
+        // glEnableVertexAttribArray(1);
+        // glBindBuffer(GL_ARRAY_BUFFER, texture_vbo);
+        // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+
+        glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 
         // Bind the texture
         glActiveTexture ( GL_TEXTURE0 );
+        glUniform1i(textureLocation, 0);
         glBindTexture ( GL_TEXTURE_2D, textureId );
 
-		glUniformMatrix4fv(gmRotationHandle, 1, GL_FALSE, matrix);
+        // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        // glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+        // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        // glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+        glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles
 
-        glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 
         eglSwapBuffers(display, surface);
-        degree = (degree + 1) % 360;
+
+        // glViewport(20,20,480,270);
+
+
         usleep(1000);
     }
     deleteShaderProgram(program);
@@ -289,7 +388,9 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 GLuint createProgram(const char *vshader, const char *fshader)
 {
     GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vshader);
+    // std::cout << "vshader = " << vshader << std::endl;
     GLuint fragShader = loadShader(GL_FRAGMENT_SHADER, fshader);
+    // std::cout << "fshader = " << fshader << std::endl;
     GLuint program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragShader);
@@ -311,6 +412,13 @@ GLuint loadShader(GLenum shaderType, const char *source)
     GLuint shader = glCreateShader(shaderType);
     glShaderSource(shader, 1, &source, nullptr);
     glCompileShader(shader);
+
+    GLint max = 1000;
+    GLchar *infolog;
+
+    glGetShaderInfoLog(shader, max, &max, infolog);
+    std::cout << " infolog \n" << infolog << std::endl;
+
     GLint compiled = GL_FALSE;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     if (compiled == GL_FALSE)
@@ -332,4 +440,3 @@ void deleteShaderProgram(GLuint shaderProgram)
 {
     glDeleteProgram(shaderProgram);
 }
-
