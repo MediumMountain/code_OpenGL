@@ -97,6 +97,7 @@ int LoadFile(char *filename)
             //     }
 
             int y,u,v;
+            // unsigned char y,u,v;
             y = yuv[i][j][0] - 16;
             u = yuv[i][j][1] - 128;
             v = yuv[i][j][2] - 128;
@@ -106,7 +107,7 @@ int LoadFile(char *filename)
             // texture[i][j][2] = (yuv[i][j][0] - 16) * 1.164 + (yuv[i][j][1] - 128) * 2.018;
 
             int R,G,B;
-
+            // unsigned char R,G,B;
             // texture[i][j][0] = y * 1.164 +                                v * 1.596;
             // texture[i][j][1] = y * 1.164 + u * -0.391 + v * -0.813;
             // texture[i][j][2] = y * 1.164 + u * 2.018;
@@ -130,13 +131,13 @@ int LoadFile(char *filename)
 
             if(((i==0)&&(j==0))||((i==87)&&(j==0))){
                 std::cout << "texture[i][j][0] = " << (int)texture[i][j][0] << std::endl;   
-                std::cout << "R Y = " << (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
-                std::cout << "R V = " << (int)(yuv[i][j][2] - 128) * 1.596 << std::endl;
+                std::cout << "R Y = " << (int)yuv[i][j][0] << " Y' =  "<< (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
+                std::cout << "R V = " << (int)yuv[i][j][2] << " V' =  "<< (int)(yuv[i][j][2] - 128) * 1.596 << std::endl;
 
                 std::cout << "texture[i][j][1] = " << (int)texture[i][j][1] << std::endl;
-                std::cout << "G Y = " << (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
-                std::cout << "G U = " << (int)(yuv[i][j][1] - 128) * -0.391 << std::endl;
-                std::cout << "G V = " << (int)(yuv[i][j][2] - 128) * -0.813 << std::endl;
+                std::cout << "G Y = " << (int)yuv[i][j][0] << " Y' =  "<< (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
+                std::cout << "G U = " << (int)yuv[i][j][1] << " U' =  "<< (int)(yuv[i][j][1] - 128) * -0.391 << std::endl;
+                std::cout << "G V = " << (int)yuv[i][j][2] << " V' =  "<< (int)(yuv[i][j][2] - 128) * -0.813 << std::endl;
 
     		    if(texture[i][j][2] < 0){
                 std::cout << "texture[i][j][2] < 0" << std::endl;
@@ -147,8 +148,8 @@ int LoadFile(char *filename)
                 }
 
                 std::cout << "texture[0][0][2] = " << (int)texture[0][0][2] << std::endl;
-                std::cout << "B Y = " << (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
-                std::cout << "B U = " << (int)(yuv[i][j][1] - 128) * 2.018 << std::endl;
+                std::cout << "B Y = " << (int)yuv[i][j][0] << " Y' =  "<< (int)(yuv[i][j][0] - 16) * 1.164 << std::endl;
+                std::cout << "B U = " << (int)yuv[i][j][1] << " U' =  "<< (int)(yuv[i][j][1] - 128) * 2.018 << std::endl;
                 // std::cout << "yuv[0][0][1] = " << (int)yuv[0][0][1] << std::endl;
                 // std::cout << "yuv[0][0][2] = " << (int)yuv[0][0][2] << std::endl;
             }
