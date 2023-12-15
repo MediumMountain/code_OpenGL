@@ -165,45 +165,152 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 
 
     GLfloat g_vertex_buffer_data[] = {
-    -1.0f,   1.0f,  0.0f,      // 0
-    -1.0f,   0.0f,  0.0f,        // 1
-    -0.8f,   -0.8f,   0.0f,        // 2
-    // -1.0f,   -1.0f,   0.0f,        // 2
+    // -0.5f,   0.5f,  0.0f,      // 0
+    // -0.5f,   0.0f,  0.0f,        // 1
+    // -0.5f,   -0.5f,   0.0f,        // 2
+    // // -0.5f,   -0.5f,   0.0f,        // 2
 
-     0.0f,   1.0f,  0.0f,      // 3
-     0.0f,   0.0f, 0.0f,      // 4
-     0.0f,   -1.0f,  0.0f,        // 5
+    //  0.0f,   0.5f,  0.0f,      // 3
+    //  0.0f,   0.0f, 0.0f,      // 4
+    //  0.0f,   -0.5f,  0.0f,        // 5
 
-     1.0f,   1.0f,  0.0f,        // 6
-     1.0f,   0.0f,  0.0f,      // 7
-     1.0f,   -1.0f, 0.0f,      // 8
+    //  0.5f,   0.5f,  0.0f,        // 6
+    //  0.5f,   0.0f,  0.0f,      // 7
+    //  0.5f,   -0.5f, 0.0f,      // 8
+
+    // -0.7f,   0.7f,  0.0f,      // 0
+    // -0.5f,   0.0f,  0.0f,        // 1
+    // -0.7f,   -0.7f,   0.0f,        // 2
+    // // -0.5f,   -0.5f,   0.0f,        // 2
+
+    //  0.0f,   0.5f,  0.0f,      // 3
+    //  0.0f,   0.0f, 0.0f,      // 4
+    //  0.0f,   -0.5f,  0.0f,        // 5
+
+    //  0.7f,   0.7f,  0.0f,        // 6
+    //  0.5f,   0.0f,  0.0f,      // 7
+    //  0.7f,   -0.7f, 0.0f,      // 8
+
+-1.000000f, 1.000000f, 0.000000f,
+-0.500000f, 1.000000f, 0.000000f,
+0.000000f, 1.000000f, 0.000000f,
+0.500000f, 1.000000f, 0.000000f,
+1.000000f, 1.000000f, 0.000000f,
+-1.000000f, 0.500000f, 0.000000f,
+-0.500000f, 0.500000f, 0.000000f,
+0.000000f, 0.500000f, 0.000000f,
+0.500000f, 0.500000f, 0.000000f,
+1.000000f, 0.500000f, 0.000000f,
+-1.000000f, 0.000000f, 0.000000f,
+-0.500000f, 0.000000f, 0.000000f,
+0.000000f, 0.000000f, 0.000000f,
+0.500000f, 0.000000f, 0.000000f,
+1.000000f, 0.000000f, 0.000000f,
+-1.000000f, -0.500000f, 0.000000f,
+-0.500000f, -0.500000f, 0.000000f,
+0.000000f, -0.500000f, 0.000000f,
+0.500000f, -0.500000f, 0.000000f,
+1.000000f, -0.500000f, 0.000000f,
+-1.000000f, -1.000000f, 0.000000f,
+-0.500000f, -1.000000f, 0.000000f,
+0.000000f, -1.000000f, 0.000000f,
+0.500000f, -1.000000f, 0.000000f,
+1.000000f, -1.000000f, 0.000000f
 
     };
 
 
     GLfloat vertex_uv[] = { 
-                0.0f, 1.0f,
-                0.0f, 0.5f,
-                0.0f, 0.0f,
+                // 0.0f, 1.0f,
+                // 0.0f, 0.5f,
+                // 0.0f, 0.0f,
 
-                0.5f, 1.0f,
-                0.5f, 0.5f,
-                0.5f, 0.0f,
+                // 0.5f, 1.0f,
+                // 0.5f, 0.5f,
+                // 0.5f, 0.0f,
 
-                1.0f, 1.0f,
-                1.0f, 0.5f,
-                1.0f, 0.0f,
-
-
+                // 1.0f, 1.0f,
+                // 1.0f, 0.5f,
+                // 1.0f, 0.0f,
+ 
+0.000000f, 1.000000f,
+0.250000f, 1.000000f,
+0.500000f, 1.000000f,
+0.750000f, 1.000000f,
+1.000000f, 1.000000f,
+0.000000f, 0.750000f,
+0.250000f, 0.750000f,
+0.500000f, 0.750000f,
+0.750000f, 0.750000f,
+1.000000f, 0.750000f,
+0.000000f, 0.500000f,
+0.250000f, 0.500000f,
+0.500000f, 0.500000f,
+0.750000f, 0.500000f,
+1.000000f, 0.500000f,
+0.000000f, 0.250000f,
+0.250000f, 0.250000f,
+0.500000f, 0.250000f,
+0.750000f, 0.250000f,
+1.000000f, 0.250000f,
+0.000000f, 0.000000f,
+0.250000f, 0.000000f,
+0.500000f, 0.000000f,
+0.750000f, 0.000000f,
+1.000000f, 0.000000f
                 };           
 
     // GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
     // GLushort indices[] = { 0, 1, 3, 1, 3, 4,};
     GLushort indices[] = { 0,1,3, 1,3,4, 3,6,7, 3,7,4, 1,2,5, 1,4,5, 4,5,7, 5,7,8};
+
+    GLfloat slice = 5;
+    GLfloat stack = 5;
+
+    int num = slice*stack*3; 
+
+    GLfloat g_vertex_buffer_data_[num]={};
+    GLfloat vertex_uv_[num]={};
+
+            // for (int i = 0; i < TEXWIDTH; i++) {
+        //     for (int j = 0; j <TEXHEIGHT; j++)
+    int m=0;
+    int n=0;
+
+    // printf("X = %f\n", ((2/(slice-1))));
+
+    for(int j = 0; j<stack; j++)
+    {
+        for(int i = 0; i<slice; i++)
+        {
+            g_vertex_buffer_data_[m]= -1 + i*(2/(slice-1));
+            g_vertex_buffer_data_[m+1]= 1 - j*(2/(stack-1));
+            g_vertex_buffer_data_[m+2]= 0.0f;            
+
+            vertex_uv_[n]   = 0 + i*(1/(slice-1));
+            vertex_uv_[n+1] = 1 - j*(1/(stack-1));
+
+            // printf("i = %d j = %d m = %d n = %d\n", i,j,m,n);
+            // printf("[x,y,z] = {%f,%f,%f}\n",
+            printf("%ff, %ff, %ff,\n",
+            g_vertex_buffer_data_[m],
+            g_vertex_buffer_data_[m+1],
+            g_vertex_buffer_data_[m+2]
+            );
+
+            // printf("[u,v] = {%f,%f}\n",
+            // printf("%ff, %ff,\n",
+            // vertex_uv_[n],
+            // vertex_uv_[n+1]
+            // );
+            m+=3; n+=2;
+        }
+    }
+
+
     GLuint program = createProgram(vshader, fshader);
 
     GLuint vao, vertex_vbo, texture_vbo;
-
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
@@ -217,10 +324,12 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 	glGenBuffers(1, &vertex_vbo); //バッファを作成
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_vbo); //以下よりvertex_vboでバインドされているバッファが処理される
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW); //実データを格納
+	// glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_), g_vertex_buffer_data_, GL_STATIC_DRAW); //実データを格納
 
 	glGenBuffers(1, &texture_vbo); //バッファを作成
 	glBindBuffer(GL_ARRAY_BUFFER, texture_vbo); //以下よりvertex_vboでバインドされているバッファが処理される
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_uv), vertex_uv, GL_STATIC_DRAW); //実データを格納
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_uv_), vertex_uv_, GL_STATIC_DRAW); //実データを格納
 
 	// GLuint colorbuffer;
 	// glGenBuffers(1, &colorbuffer);
