@@ -261,23 +261,18 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
                 };           
 
     // GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-    // GLushort indices[] = { 0, 1, 3, 1, 3, 4,};
-    GLushort indices[] = { 0,1,3, 1,3,4, 3,6,7, 3,7,4, 1,2,5, 1,4,5, 4,5,7, 5,7,8};
 
-    GLfloat slice = 5;
-    GLfloat stack = 5;
+    GLfloat slice = 9;
+    GLfloat stack = 9;
 
     int num = slice*stack*3; 
 
     GLfloat g_vertex_buffer_data_[num]={};
     GLfloat vertex_uv_[num]={};
 
-            // for (int i = 0; i < TEXWIDTH; i++) {
-        //     for (int j = 0; j <TEXHEIGHT; j++)
     int m=0;
     int n=0;
 
-    // printf("X = %f\n", ((2/(slice-1))));
 
     for(int j = 0; j<stack; j++)
     {
@@ -290,8 +285,6 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
             vertex_uv_[n]   = 0 + i*(1/(slice-1));
             vertex_uv_[n+1] = 1 - j*(1/(stack-1));
 
-            // printf("i = %d j = %d m = %d n = %d\n", i,j,m,n);
-            // printf("[x,y,z] = {%f,%f,%f}\n",
             printf("%ff, %ff, %ff,\n",
             g_vertex_buffer_data_[m],
             g_vertex_buffer_data_[m+1],
@@ -306,6 +299,49 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
             m+=3; n+=2;
         }
     }
+
+    int s=0;
+    int u=0;
+
+    int t_max = (slice-1)*(stack-1);
+    int u_max = slice*stack-1;
+    int s_max = 6*(slice-1)*(stack-1);
+    GLushort indices[s_max]={};
+
+    for(int t=0; t<t_max; t++)
+    {
+        if(0!=t%((int)slice-1))
+        {
+            u++;
+        }
+        else if(0==t)
+        {}
+        else
+        {
+            u+=2;
+        }
+            indices[s]=u;
+            indices[s+1]=u+1;
+            indices[s+2]=u+slice;
+
+            indices[s+3]=u+1;
+            indices[s+4]=u+slice;
+            indices[s+5]=u+slice+1;
+
+            // printf("s = %d, t = %d, u = %d, %d, %d, %d, %d, %d, %d\n",
+            // s,t,u,
+            // indices[s],
+            // indices[s+1],
+            // indices[s+2],
+            // indices[s+3],
+            // indices[s+4],
+            // indices[s+5]        
+            // );
+
+            s+=6;
+
+    }
+
 
 
     GLuint program = createProgram(vshader, fshader);
@@ -323,13 +359,13 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 	// 頂点座標のVBOを作成	
 	glGenBuffers(1, &vertex_vbo); //バッファを作成
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_vbo); //以下よりvertex_vboでバインドされているバッファが処理される
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW); //実データを格納
-	// glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_), g_vertex_buffer_data_, GL_STATIC_DRAW); //実データを格納
+	// glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW); //実データを格納
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_), g_vertex_buffer_data_, GL_STATIC_DRAW); //実データを格納
 
 	glGenBuffers(1, &texture_vbo); //バッファを作成
 	glBindBuffer(GL_ARRAY_BUFFER, texture_vbo); //以下よりvertex_vboでバインドされているバッファが処理される
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_uv), vertex_uv, GL_STATIC_DRAW); //実データを格納
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_uv_), vertex_uv_, GL_STATIC_DRAW); //実データを格納
+	// glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_uv), vertex_uv, GL_STATIC_DRAW); //実データを格納
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_uv_), vertex_uv_, GL_STATIC_DRAW); //実データを格納
 
 	// GLuint colorbuffer;
 	// glGenBuffers(1, &colorbuffer);
@@ -391,7 +427,8 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
         // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         // glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
         // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        glDrawElements ( GL_TRIANGLES, 24, GL_UNSIGNED_SHORT, indices );
+        glDrawElements ( GL_TRIANGLES, s_max, GL_UNSIGNED_SHORT, indices );
+        // glDrawElements ( GL_TRIANGLES, 96, GL_UNSIGNED_SHORT, indices );
         // glDrawArrays(GL_TRIANGLES, 0, 6); // 12*3 indices starting at 0 -> 12 triangles
 
 		glDisableVertexAttribArray(0);
