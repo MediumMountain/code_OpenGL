@@ -54,8 +54,8 @@ int main()
 
     XMapWindow(xdisplay, xwindow);
 
-    // int size = LoadFile("../bmp/num256.bmp");
-    int size = LoadFile("../bmp/paraboloid1.bmp");
+    int size = LoadFile("../bmp/num256.bmp");
+    // int size = LoadFile("../bmp/paraboloid1.bmp");
 
     EGLDisplay display = nullptr;
     EGLContext context = nullptr;
@@ -262,10 +262,33 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
 
     // GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    GLfloat slice = 9;
-    GLfloat stack = 9;
+    // -0.59f,   -1.0f,  0.0f,      // 0
+    // -0.19f,  0.37f,   0.0f,      // 1
+    //  0.19f,   0.37f,  0.0f,        // 3
+    //  0.59f,  -1.0f,   0.0f,        // 2
 
+    // 1,3,5,9,17
+    GLfloat slice = 3;
+    GLfloat stack = 3;
     int num = slice*stack*3; 
+
+    GLfloat TopLeft = -0.19;
+    GLfloat TopRight = 0.19;
+    GLfloat BottomLeft = -0.59;
+    GLfloat BottomRight = 0.59;
+
+    // GLfloat Top = 0.37;
+    GLfloat Top = 0.37;
+    GLfloat Bottom = -1.0;
+
+    GLfloat Height = Top-Bottom;
+    GLfloat deltaHeight = Height/(stack-1);    
+
+    GLfloat deltaLeft = (TopLeft-BottomLeft)/(stack-1);
+    GLfloat deltaRight = -(TopRight-BottomRight)/(stack-1);
+
+ printf("Height %ff,deltaHeight %ff, deltaLeft %ff, deltaRight %ff,\n", Height, deltaHeight, deltaLeft, deltaRight);
+
 
     GLfloat g_vertex_buffer_data_[num]={};
     GLfloat vertex_uv_[num]={};
@@ -278,18 +301,29 @@ void mainloop(Display *xdisplay, EGLDisplay display, EGLSurface surface)
     {
         for(int i = 0; i<slice; i++)
         {
-            g_vertex_buffer_data_[m]= -1 + i*(2/(slice-1));
-            g_vertex_buffer_data_[m+1]= 1 - j*(2/(stack-1));
+            //jの値からW_jを求める
+            GLfloat Left_j = TopLeft - deltaLeft*j;
+            GLfloat Right_j = TopRight + deltaRight*j;
+            GLfloat W_j = Right_j - Left_j;
+            GLfloat deltaW_j = W_j/(slice-1);
+            // g_vertex_buffer_data_[m]= -1 + i*(2/(slice-1));
+
+            g_vertex_buffer_data_[m]= Left_j + i*deltaW_j;
+            g_vertex_buffer_data_[m+1]= Top - j*deltaHeight;
             g_vertex_buffer_data_[m+2]= 0.0f;            
 
             vertex_uv_[n]   = 0 + i*(1/(slice-1));
             vertex_uv_[n+1] = 1 - j*(1/(stack-1));
 
-            printf("%ff, %ff, %ff,\n",
-            g_vertex_buffer_data_[m],
-            g_vertex_buffer_data_[m+1],
-            g_vertex_buffer_data_[m+2]
+            printf("Left_j = %ff, Right_j = %ff, W_j = %ff,\n",
+                Left_j, Right_j, W_j 
             );
+
+            // printf("%ff, %ff, %ff,\n",
+            // g_vertex_buffer_data_[m],
+            // g_vertex_buffer_data_[m+1],
+            // g_vertex_buffer_data_[m+2]
+            // );
 
             // printf("[u,v] = {%f,%f}\n",
             // printf("%ff, %ff,\n",
